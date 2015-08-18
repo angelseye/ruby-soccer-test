@@ -33,51 +33,82 @@ class Soccer
 	# Gets a data object from a given file
 	def self.get_data_from_file(file)
 		# read file and return
-		CSV.read(file)
+		CSV.read(file, {headers: true, header_converters: :symbol})
 	end
 
 
 
 	# returns team with the smallest goal difference
 	def self.smallest_goal_difference(data)
-		# remove headers
-		
 		# compare and contrast for smallest difference
-		team = data[1][0]
+		team = data.dup.sort { |x,y|  goal_diff(x) <=> goal_diff(y) }
 
 		# return data
 		puts ""
-		puts "Team with the smallest goal difference between 'for' and 'against': " + team
+		puts "Team with the smallest goal difference between 'for' and 'against' goals: " + team[0][:team]
 		puts ""
+	end
+
+
+
+	# function to process goal difference sorting
+	def self.goal_diff(z)
+		# vars
+		goals = z[:goals].to_i
+		goals_allowed = z[:goals_allowed].to_i
+		# figure out difference
+		diff = goals - goals_allowed
+		# make positive if negative
+		diff = diff * -1 if diff < 0
+		return diff
 	end
 
 
 
 	# returns top 10 teams with highest win percentage
 	def self.top_ten_win_percentage(data)
-		# read data
-
 		# grab top 10 teams
-		results = "teams go here"
+		results = data.dup.sort{ |x,y| win_pct(x) <=> win_pct(y) }.reverse
 		
 		# return data
 		puts ""
 		puts "Top 10 teams by win percentage (%):"
-		puts results
+		format = '%-3s %-15s'
+		i=0
+		n=1
+		while i < 10 do
+			puts format % [ n, results[i][:team] ]
+			i+=1
+			n+=1
+		end
 		puts ""
+	end
+
+
+
+	# win percentage
+	def self.win_pct(z)
+		# vars
+		games = z[:games].to_f
+		wins = z[:wins].to_f
+		draws = z[:draws].to_f
+		# calculate pct
+		((wins + (draws/2)) / games) * 100
 	end
 
 
 
 	# returns fulls stats by most draws
 	def self.most_draws(data)
-		# read data
 		# get record of team with most draws
-		row = data[2]
+		sorted = data.dup.sort_by{ |i| i.values_at(:draws).reverse }
+		row = sorted[0]
 		# return data
 		puts ""
 		puts "Team with the most draws (full stats):"
-		puts row.inspect
+		format = '%-20s %-6s %-5s %-7s %-6s %-6s %-14s %-7s'
+		puts format % ["Team", "Games", "Wins", "Losses", "Draws", "Goals", "Goals Allowed", "Points"]
+		puts format % [row[:team], row[:games], row[:wins], row[:losses], row[:draws], row[:goals], row[:goals_allowed], row[:points] ]
 		puts ""
 	end
 
